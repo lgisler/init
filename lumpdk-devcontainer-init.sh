@@ -9,7 +9,6 @@ sudo apt-get install -y firefox zsh vim
 
 LUM="${HOME}/LumPDK"
 "${LUM}/bootstrap.py"
-"${LUM}/scripts/install/install_helix.sh"
 source "${HOME}/.nix-profile/etc/profile.d/nix.sh"
 ln -s "${HOME}/.config" "${LUM}/.config"
 
