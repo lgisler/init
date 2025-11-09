@@ -2,14 +2,22 @@
 
 set -euxo pipefail
 
-# Configuration
+# Configuration (need to change)
 SOURCE_DIR="/path/to/source/directory"
 BORG_REPO="/path/to/borg/repo" 
 RCLONE_REMOTE="remote:path/to/backup"
+
+# Configuration (defaults)
 BACKUP_NAME=$(date +%Y-%m-%d_%H%M%S)
+LOG_DIR="./logs"
+LOG_FILE="LOG_FILE="$LOG_DIR/$BACKUP_NAME.log""
 
 # Optional: 
 # export BORG_PASSPHRASE="add-your-borg-repo-password-here"
+
+# log output (useful for automation)
+mkdir -p "$LOG_DIR"
+exec > >(tee -a "$LOG_FILE") 2>&1
 
 show_help() {
     cat << EOF
@@ -84,7 +92,12 @@ upload_to_proton() {
     fi
     
     echo "Uploading to Proton Drive..."
-    rclone sync "$BORG_REPO" "$RCLONE_REMOTE" --progress --transfers 8
+    rclone sync "$BORG_REPO" "$RCLONE_REMOTE" \
+      --progress \
+      --transfers 4 \
+      --retries 10 \
+      --low-level-retries 10 \
+      --tpslimit 5
     
     echo "Upload complete"
 }
