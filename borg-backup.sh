@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 # Configuration
 SOURCE_DIR="/path/to/source/directory"
 BORG_REPO="/path/to/borg/repo" 
@@ -29,19 +31,30 @@ backup_data() {
         echo "Repository not initialized. Run with --init first"
         exit 1
     fi
+
+    # Dump postgres database
+    echo "Backing up postgres database..."
+    docker exec -t immich_postgres pg_dumpall --clean --if-exists --username=postgres > "$SOURCE_DIR"/database-backup/immich-database.sql
     
     echo "Creating backup: $BACKUP_NAME"
-    borg create --compression lz4 "$BORG_REPO::$BACKUP_NAME" "$SOURCE_DIR"
+    borg create --compression lz4 \
+      "$BORG_REPO::$BACKUP_NAME" \
+      "$SOURCE_DIR" \
+      --exclude "$SOURCE_DIR/thumbs/" \
+      --exclude "$SOURCE_DIR/encoded-video/"
     
     echo "Pruning old backups..."
     borg prune "$BORG_REPO" --keep-daily=7 --keep-weekly=4 --keep-monthly=6
+
+    echo "Compacting repository..."
+    borg compact "$BORG_REPO"
     
     echo "Backup complete"
 }
 
 upload_to_proton() {
     if [ ! -d "$BORG_REPO/data" ]; then
-        echo "Repository not found at: $BORG_REPO"
+        echo "Repository data not found at: $BORG_REPO/data"
         exit 1
     fi
     
