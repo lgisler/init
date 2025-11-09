@@ -18,7 +18,7 @@ ln -s "${HOME}/.config" "${LUM}/.config"
 
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 
-cat <<EOF > "${HOME}/.zshrc"
+cat <<EOF >"${HOME}/.zshrc"
 export ZSH="\${HOME}/.oh-my-zsh"
 ZSH_THEME="evan"
 HOST="dkr"
