@@ -17,6 +17,7 @@ LOG_FILE="LOG_FILE="$LOG_DIR/$BACKUP_NAME.log""
 
 # log output (useful for automation)
 mkdir -p "$LOG_DIR"
+touch "$LOG_FILE"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 show_help() {
@@ -85,16 +86,16 @@ backup_data() {
     echo "Backup complete"
 }
 
-upload_to_proton() {
+upload_to_remote() {
     if [ ! -d "$BORG_REPO/data" ]; then
         echo "Repository data not found at: $BORG_REPO/data"
         exit 1
     fi
     
-    echo "Uploading to Proton Drive..."
+    echo "Uploading to rclone remote..."
     rclone sync "$BORG_REPO" "$RCLONE_REMOTE" \
       --progress \
-      --transfers 4 \
+      --transfers 4 \ # if remote is flaky reduce this number
       --retries 10 \
       --low-level-retries 10 \
       --tpslimit 5
@@ -111,7 +112,7 @@ case "${1:-}" in
         backup_data
         ;;
     --upload)
-        upload_to_proton
+        upload_to_remote
         ;;
     -h|--help|"")
         show_help
