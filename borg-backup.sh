@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# Configuration
+SOURCE_DIR="/path/to/source/directory"
+BORG_REPO="/path/to/borg/repo" 
+RCLONE_REMOTE="remote:path/to/backup"
+BACKUP_NAME=$(date +%Y-%m-%d_%H%M%S)
+
+# Functions
+init_repo() {
+    if [ -d "$BORG_REPO/data" ]; then
+        echo "Repository already initialized at: $BORG_REPO"
+        exit 0
+    fi
+    
+    echo "Initializing borg repository..."
+    borg init --encryption=repokey-blake2 "$BORG_REPO"
+    
+    echo "Exporting borg key..."
+    borg key export "$BORG_REPO" encrypted-key-backup
+    
+    echo "Done. Repository initialized at: $BORG_REPO"
+    echo "Key exported to: encrypted-key-backup"
+    echo "BACKUP THIS KEY FILE TO SEPARATE LOCATION"
+}
+
+backup_data() {
+    if [ ! -d "$BORG_REPO/data" ]; then
+        echo "Repository not initialized. Run with --init first"
+        exit 1
+    fi
+    
+    echo "Creating backup: $BACKUP_NAME"
+    borg create --compression lz4 "$BORG_REPO::$BACKUP_NAME" "$SOURCE_DIR"
+    
+    echo "Pruning old backups..."
+    borg prune "$BORG_REPO" --keep-daily=7 --keep-weekly=4 --keep-monthly=6
+    
+    echo "Backup complete"
+}
+
+upload_to_proton() {
+    if [ ! -d "$BORG_REPO/data" ]; then
+        echo "Repository not found at: $BORG_REPO"
+        exit 1
+    fi
+    
+    echo "Uploading to Proton Drive..."
+    rclone sync "$BORG_REPO" "$RCLONE_REMOTE" --progress --transfers 8
+    
+    echo "Upload complete"
+}
+
+# Parse arguments
+case "$1" in
+    --init)
+        init_repo
+        ;;
+    --backup)
+        backup_data
+        ;;
+    --upload)
+        upload_to_proton
+        ;;
+    *)
+        echo "Usage: $0 {--init|--backup|--upload}"
+        exit 1
+        ;;
+esac
