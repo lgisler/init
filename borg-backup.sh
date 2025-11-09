@@ -10,14 +10,13 @@ RCLONE_REMOTE="remote:path/to/backup"
 # Configuration (defaults)
 BACKUP_NAME=$(date +%Y-%m-%d_%H%M%S)
 LOG_DIR="./logs"
-LOG_FILE="LOG_FILE="$LOG_DIR/$BACKUP_NAME.log""
+LOG_FILE="$LOG_DIR/$BACKUP_NAME.log"
 
 # Optional:
 # export BORG_PASSPHRASE="add-your-borg-repo-password-here"
 
 # log output (useful for automation)
 mkdir -p "$LOG_DIR"
-touch "$LOG_FILE"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 show_help() {
@@ -110,7 +109,7 @@ setup_cron() {
 	CRON_JOB="30 3 * * * $SCRIPT_PATH --backup && $SCRIPT_PATH --upload"
 
 	# Check if cron job already exists
-	if crontab -l 2>/dev/null | grep -Fq "$SCRIPT_PATH"; then
+	if crontab -l 2>/dev/null | grep -F "$SCRIPT_PATH" >/dev/null 2>&1; then
 		echo "Cron job already exists for this script"
 		crontab -l | grep -F "$SCRIPT_PATH"
 		exit 0
@@ -118,7 +117,7 @@ setup_cron() {
 
 	# Add cron job
 	(
-		crontab -l 2>/dev/null
+		crontab -l 2>/dev/null || true
 		echo "$CRON_JOB"
 	) | crontab -
 
