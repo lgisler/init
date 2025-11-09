@@ -93,18 +93,20 @@ upload_to_remote() {
 		exit 1
 	fi
 
-	echo "Uploading to rclone remote..."
-	rclone sync "$BORG_REPO" "$RCLONE_REMOTE" \
-		--progress \
-		--transfers 1 \
-		--retries 10 \
-		--low-level-retries 10 \
-		--tpslimit 5 \
-		--timeout 6h \
-		--contimeout 60s \
-		--timeout-activity 5m
+	# echo "Uploading to rclone remote..."
+	# rclone sync "$BORG_REPO" "$RCLONE_REMOTE" \
+	# 	--progress \
+	# 	--transfers 1 \
+	# 	--retries 10 \
+	# 	--low-level-retries 10 \
+	# 	--tpslimit 5 \
+	# 	--timeout 6h \
+	# 	--contimeout 60s
+	#
+	# echo "Upload complete"
 
-	echo "Upload complete"
+  # rsync to fuse mount instead, since protondrive is trash with rclone
+  rsync -avh --progress --delete $BORG_REPO /home/luis/s3drive_proton/backup/
 }
 
 setup_cron() {
