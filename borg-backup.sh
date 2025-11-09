@@ -8,6 +8,9 @@ BORG_REPO="/path/to/borg/repo"
 RCLONE_REMOTE="remote:path/to/backup"
 BACKUP_NAME=$(date +%Y-%m-%d_%H%M%S)
 
+# Optional: 
+# export BORG_PASSPHRASE="add-your-borg-repo-password-here"
+
 show_help() {
     cat << EOF
 Usage: $0 {--init|--backup|--upload|--help}
