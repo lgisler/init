@@ -8,7 +8,29 @@ BORG_REPO="/path/to/borg/repo"
 RCLONE_REMOTE="remote:path/to/backup"
 BACKUP_NAME=$(date +%Y-%m-%d_%H%M%S)
 
-# Functions
+show_help() {
+    cat << EOF
+Usage: $0 {--init|--backup|--upload|--help}
+
+Commands:
+  --init      Initialize new borg repository with encryption
+  --backup    Create backup of source directory to borg repo
+  --upload    Upload borg repository to remote storage via rclone
+  --help  Show this help message
+
+Configuration:
+  SOURCE_DIR:    $SOURCE_DIR
+  BORG_REPO:     $BORG_REPO
+  RCLONE_REMOTE: $RCLONE_REMOTE
+
+Examples:
+  $0 --init                    # Initialize repository
+  $0 --backup                  # Create backup
+  $0 --upload                  # Upload to remote
+  $0 --backup && $0 --upload   # Backup and upload
+EOF
+}
+
 init_repo() {
     if [ -d "$BORG_REPO/data" ]; then
         echo "Repository already initialized at: $BORG_REPO"
@@ -37,7 +59,7 @@ backup_data() {
     docker exec -t immich_postgres pg_dumpall --clean --if-exists --username=postgres > "$SOURCE_DIR"/database-backup/immich-database.sql
     
     echo "Creating backup: $BACKUP_NAME"
-    borg create --compression lz4 \
+    borg create --progress --stats --compression lz4 \
       "$BORG_REPO::$BACKUP_NAME" \
       "$SOURCE_DIR" \
       --exclude "$SOURCE_DIR/thumbs/" \
@@ -65,7 +87,7 @@ upload_to_proton() {
 }
 
 # Parse arguments
-case "$1" in
+case "${1:-}" in
     --init)
         init_repo
         ;;
@@ -75,8 +97,13 @@ case "$1" in
     --upload)
         upload_to_proton
         ;;
+    -h|--help|"")
+        show_help
+        ;;
     *)
-        echo "Usage: $0 {--init|--backup|--upload}"
+        echo "Error: Unknown option '$1'"
+        echo ""
+        show_help
         exit 1
         ;;
 esac
