@@ -9,7 +9,7 @@ RCLONE_REMOTE="remote:path/to/backup"
 
 # Configuration (defaults)
 BACKUP_NAME=$(date +%Y-%m-%d_%H%M%S)
-LOG_DIR="./logs"
+LOG_DIR="/path/to/logs"
 LOG_FILE="$LOG_DIR/$BACKUP_NAME.log"
 
 # Optional:
