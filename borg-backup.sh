@@ -99,7 +99,10 @@ upload_to_remote() {
 		--transfers 4 \
 		--retries 10 \
 		--low-level-retries 10 \
-		--tpslimit 5
+		--tpslimit 5 \
+		--timeout 6h \
+		--contimeout 60s \
+		--timeout-activity 5m
 
 	echo "Upload complete"
 }
