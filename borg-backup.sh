@@ -28,6 +28,7 @@ Commands:
   --init      Initialize new borg repository with encryption
   --backup    Create backup of source directory to borg repo
   --upload    Upload borg repository to remote storage via rclone
+  --setup-cron  Setup cron job to run backup and upload at 3:30am daily
   --help  Show this help message
 
 Configuration:
@@ -39,6 +40,7 @@ Examples:
   $0 --init                    # Initialize repository
   $0 --backup                  # Create backup
   $0 --upload                  # Upload to remote
+  $0 --setup-cron              # Setup automated daily backups
   $0 --backup && $0 --upload   # Backup and upload
 EOF
 }
@@ -103,6 +105,26 @@ upload_to_remote() {
     echo "Upload complete"
 }
 
+ setup_cron() {
+     SCRIPT_PATH="$(readlink -f "$0")"
+     CRON_JOB="30 3 * * * $SCRIPT_PATH --backup && $SCRIPT_PATH --upload"
+     
+     # Check if cron job already exists
+     if crontab -l 2>/dev/null | grep -Fq "$SCRIPT_PATH"; then
+         echo "Cron job already exists for this script"
+         crontab -l | grep -F "$SCRIPT_PATH"
+         exit 0
+     fi
+     
+     # Add cron job
+     (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
+     
+     echo "Cron job added successfully:"
+     echo "$CRON_JOB"
+     echo ""
+     echo "Backup and upload will run daily at 3:30 AM"
+ }
+
 # Parse arguments
 case "${1:-}" in
     --init)
@@ -113,6 +135,9 @@ case "${1:-}" in
         ;;
     --upload)
         upload_to_remote
+        ;;
+    --setup-cron)
+        setup_cron
         ;;
     -h|--help|"")
         show_help
