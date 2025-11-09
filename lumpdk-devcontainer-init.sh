@@ -33,3 +33,5 @@ alias bbq="bzt --config=quality"
 # Environment
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/\$(id -u)/bus
 EOF
+
+# echo "Or set CURSOR_AUTH_TOKEN environment variable for automatic login."
